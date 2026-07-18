@@ -81,7 +81,7 @@ export default function PanelIngresos() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#F5F7F0]">
+      <div className="flex items-center justify-center min-h-screen bg-[#E8E4D9]">
         <p className="text-[#8A9A8A]">Cargando ingresos...</p>
       </div>
     )
@@ -89,22 +89,22 @@ export default function PanelIngresos() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F5F7F0] p-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#E8E4D9] p-4">
         <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-xl p-4 mb-4">{error}</p>
-        <Button variant="outline" onClick={() => router.push('/')}>Volver al inicio</Button>
+        <Button variant="outline" onClick={() => router.push('/')} className="bg-[#5C6B73] hover:bg-[#4A5A63] text-white border-0">Volver al inicio</Button>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7F0] py-8 px-4">
+    <div className="min-h-screen bg-[#E8E4D9] py-8 px-4">
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* Cabecera */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-[#2C3E2D]">Panel de Ingresos</h1>
-            <Button variant="outline" onClick={() => router.push('/')}>
+            <h1 className="text-2xl font-bold text-[#3A5A40]">Panel de Ingresos</h1>
+            <Button variant="outline" onClick={() => router.push('/')} className="bg-[#5C6B73] hover:bg-[#4A5A63] text-white border-0">
               Volver
             </Button>
           </div>
@@ -112,39 +112,39 @@ export default function PanelIngresos() {
 
         {/* Resumen rápido */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl shadow-sm p-5 text-center">
+          <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 text-center">
             <p className="text-xs font-medium text-[#8A9A8A] uppercase tracking-wide mb-1">Hoy</p>
-            <p className="text-2xl font-bold text-[#2C3E2D]">{formatear(totales.hoy)}</p>
+            <p className="text-2xl font-bold text-[#1F2937]">{formatear(totales.hoy)}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-5 text-center">
+          <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 text-center">
             <p className="text-xs font-medium text-[#8A9A8A] uppercase tracking-wide mb-1">Este mes</p>
-            <p className="text-2xl font-bold text-[#2C3E2D]">{formatear(totales.mes)}</p>
+            <p className="text-2xl font-bold text-[#1F2937]">{formatear(totales.mes)}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-5 text-center">
+          <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 text-center">
             <p className="text-xs font-medium text-[#8A9A8A] uppercase tracking-wide mb-1">Total general</p>
-            <p className="text-2xl font-bold text-[#2C3E2D]">{formatear(totales.general)}</p>
+            <p className="text-2xl font-bold text-[#1F2937]">{formatear(totales.general)}</p>
           </div>
         </div>
 
         {/* Desglose por método de pago */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#7A9A7A]">
+          <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 border-l-4 border-l-[#7A9A7A]">
             <p className="text-xs font-medium text-[#8A9A8A] uppercase tracking-wide mb-1">Efectivo</p>
-            <p className="text-xl font-bold text-[#2C3E2D]">{formatear(totales.efectivo)}</p>
+            <p className="text-xl font-bold text-[#1F2937]">{formatear(totales.efectivo)}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#5B8DEF]">
+          <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 border-l-4 border-l-[#5B8DEF]">
             <p className="text-xs font-medium text-[#8A9A8A] uppercase tracking-wide mb-1">Bizum</p>
-            <p className="text-xl font-bold text-[#2C3E2D]">{formatear(totales.bizum)}</p>
+            <p className="text-xl font-bold text-[#1F2937]">{formatear(totales.bizum)}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#D4A373]">
+          <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 border-l-4 border-l-[#D4A373]">
             <p className="text-xs font-medium text-[#8A9A8A] uppercase tracking-wide mb-1">Tarjeta</p>
-            <p className="text-xl font-bold text-[#2C3E2D]">{formatear(totales.tarjeta)}</p>
+            <p className="text-xl font-bold text-[#1F2937]">{formatear(totales.tarjeta)}</p>
           </div>
         </div>
 
         {/* Historial de pagos */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-[#2C3E2D] mb-5">Historial de pagos</h2>
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+          <h2 className="text-lg font-semibold text-[#3A5A40] mb-5">Historial de pagos</h2>
 
           {ingresos.length === 0 ? (
             <p className="text-[#8A9A8A] text-center py-8">No hay pagos registrados aún.</p>
@@ -152,7 +152,7 @@ export default function PanelIngresos() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#DDE3D8] text-left text-[#8A9A8A]">
+                  <tr className="border-b border-gray-200 text-left text-[#8A9A8A]">
                     <th className="pb-3 font-medium">Fecha</th>
                     <th className="pb-3 font-medium">Cliente</th>
                     <th className="pb-3 font-medium">Monto</th>
@@ -161,7 +161,7 @@ export default function PanelIngresos() {
                 </thead>
                 <tbody>
                   {ingresos.map((ing) => (
-                    <tr key={ing.id} className="border-b border-[#EDF0EA] hover:bg-[#F8FAF6] transition">
+                    <tr key={ing.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
                       <td className="py-3 text-[#5A6B5A]">
                         {new Date(ing.creado_el).toLocaleDateString('es-ES', {
                           day: '2-digit',
@@ -169,10 +169,10 @@ export default function PanelIngresos() {
                           year: 'numeric',
                         })}
                       </td>
-                      <td className="py-3 font-medium text-[#2C3E2D]">
+                      <td className="py-3 font-medium text-[#1F2937]">
                         {ing.clientes?.nombre || '—'}
                       </td>
-                      <td className="py-3 font-semibold text-[#2C3E2D]">
+                      <td className="py-3 font-semibold text-[#1F2937]">
                         {formatear(Number(ing.monto_total))}
                       </td>
                       <td className="py-3">

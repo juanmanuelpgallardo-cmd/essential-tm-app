@@ -86,103 +86,113 @@ export default function ListaClientes() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground">Cargando clientes...</p>
+      <div className="flex items-center justify-center min-h-screen bg-[#E8E4D9]">
+        <p className="text-[#8A9A8A] text-sm">Cargando clientes...</p>
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Clientes</h1>
-        <Button onClick={() => router.push('/')}>Volver al inicio</Button>
-      </div>
+    <div className="min-h-screen bg-[#E8E4D9] py-8 px-4">
+      <div className="max-w-4xl mx-auto space-y-6">
 
-      {error && (
-        <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded p-3 mb-4">{error}</p>
-      )}
-
-      <Button onClick={() => setShowForm(!showForm)} className="mb-6">
-        {showForm ? 'Cancelar' : 'Nuevo cliente'}
-      </Button>
-
-      {showForm && (
-        <form onSubmit={handleCreate} className="border rounded p-4 mb-6 space-y-3 bg-muted/30">
-          <input
-            className="border p-2 w-full rounded"
-            placeholder="Nombre *"
-            value={newNombre}
-            onChange={(e) => setNewNombre(e.target.value)}
-            required
-            disabled={creating}
-          />
-          <input
-            className="border p-2 w-full rounded"
-            placeholder="Teléfono"
-            value={newTelefono}
-            onChange={(e) => setNewTelefono(e.target.value)}
-            disabled={creating}
-          />
-          <input
-            className="border p-2 w-full rounded"
-            placeholder="Email"
-            type="email"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            disabled={creating}
-          />
-          <Button type="submit" disabled={creating || !newNombre.trim()}>
-            {creating ? 'Creando...' : 'Crear cliente'}
-          </Button>
-        </form>
-      )}
-
-      {clientes.length === 0 ? (
-        <p className="text-muted-foreground text-center py-12">
-          No hay clientes registrados. Crea el primero.
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b text-left text-sm text-muted-foreground">
-                <th className="pb-2 font-medium">Nombre</th>
-                <th className="pb-2 font-medium">Teléfono</th>
-                <th className="pb-2 font-medium">Email</th>
-                <th className="pb-2 font-medium">Registro</th>
-                <th className="pb-2 font-medium">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.map((p) => (
-                <tr key={p.id} className="border-b hover:bg-muted/30">
-                  <td className="py-3">
-                    <Link href={`/clientes/${p.id}`} className="text-blue-600 hover:underline font-medium">
-                      {p.nombre}
-                    </Link>
-                  </td>
-                  <td className="py-3 text-sm">{p.telefono || '-'}</td>
-                  <td className="py-3 text-sm">{p.email || '-'}</td>
-                  <td className="py-3 text-sm">
-                    {new Date(p.creado_el).toLocaleDateString()}
-                  </td>
-                  <td className="py-3">
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="xs" onClick={() => router.push(`/clientes/${p.id}`)}>
-                        Abrir
-                      </Button>
-                      <Button variant="destructive" size="xs" onClick={() => handleDelete(p.id, p.nombre)}>
-                        Eliminar
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Cabecera */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-[#3A5A40]">Clientes</h1>
+            <Button variant="outline" onClick={() => router.push('/')} className="bg-[#5C6B73] hover:bg-[#4A5A63] text-white border-0">
+              Volver al inicio
+            </Button>
+          </div>
         </div>
-      )}
+
+        {error && (
+          <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-2xl p-4">{error}</p>
+        )}
+
+        <Button onClick={() => setShowForm(!showForm)} className="bg-[#5C6B73] hover:bg-[#4A5A63] text-white rounded-xl px-5 py-2.5 text-sm font-medium border-0">
+          {showForm ? 'Cancelar' : 'Nuevo cliente'}
+        </Button>
+
+        {showForm && (
+          <form onSubmit={handleCreate} className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 space-y-4">
+            <input
+              className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#3A5A40] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#C99470] focus:border-transparent focus:bg-white transition"
+              placeholder="Nombre *"
+              value={newNombre}
+              onChange={(e) => setNewNombre(e.target.value)}
+              required
+              disabled={creating}
+            />
+            <input
+              className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#3A5A40] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#C99470] focus:border-transparent focus:bg-white transition"
+              placeholder="Teléfono"
+              value={newTelefono}
+              onChange={(e) => setNewTelefono(e.target.value)}
+              disabled={creating}
+            />
+            <input
+              className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#3A5A40] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#C99470] focus:border-transparent focus:bg-white transition"
+              placeholder="Email"
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              disabled={creating}
+            />
+            <Button type="submit" disabled={creating || !newNombre.trim()} className="w-full bg-[#C99470] hover:bg-[#B88363] text-white border-0 py-3 text-sm font-medium">
+              {creating ? 'Creando...' : 'Crear cliente'}
+            </Button>
+          </form>
+        )}
+
+        {clientes.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 text-center">
+            <p className="text-[#8A9A8A] text-sm py-8">No hay clientes registrados. Crea el primero.</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 text-left text-[#8A9A8A]">
+                    <th className="pb-3 font-medium">Nombre</th>
+                    <th className="pb-3 font-medium">Teléfono</th>
+                    <th className="pb-3 font-medium">Email</th>
+                    <th className="pb-3 font-medium">Registro</th>
+                    <th className="pb-3 font-medium">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clientes.map((p) => (
+                    <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                      <td className="py-3">
+                        <Link href={`/clientes/${p.id}`} className="text-[#C99470] hover:underline font-medium">
+                          {p.nombre}
+                        </Link>
+                      </td>
+                      <td className="py-3 text-[#5A6B5A]">{p.telefono || '-'}</td>
+                      <td className="py-3 text-[#5A6B5A]">{p.email || '-'}</td>
+                      <td className="py-3 text-[#8A9A8A] text-xs">
+                        {new Date(p.creado_el).toLocaleDateString()}
+                      </td>
+                      <td className="py-3">
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="xs" onClick={() => router.push(`/clientes/${p.id}`)} className="bg-[#5C6B73] hover:bg-[#4A5A63] text-white border-0">
+                            Abrir
+                          </Button>
+                          <Button variant="destructive" size="xs" onClick={() => handleDelete(p.id, p.nombre)}>
+                            Eliminar
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

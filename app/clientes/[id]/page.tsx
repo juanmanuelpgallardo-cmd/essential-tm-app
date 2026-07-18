@@ -4,15 +4,37 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from "@/components/ui/button"
+import BodyMap from './BodyMap'
 
 type Cliente = {
   id: string
   nombre: string
   telefono: string | null
   email: string | null
+  sexo: string | null
+  tipo_tratamiento: string | null
+  recomendaciones_proxima: string | null
+  aparatologia: string | null
+  suplementacion_prozis: string | null
   notas_privadas: string | null
   creado_el: string
 }
+
+const tiposTratamiento = ['Descontracturante', 'Relajante', 'Deportivo', 'Drenaje Linfático']
+
+const aparatologiaOptions = [
+  'Pistola de Percusión',
+  'Presoterapia',
+  'Radiofrecuencia/Tecar',
+  'Ventosas (Cupping)',
+]
+
+const prozisOptions = [
+  'Colágeno + Magnesio (Cuidado Articular)',
+  'Proteína Whey (Recuperación Muscular)',
+  'Creatina Monohidrato (Fuerza y Rendimiento)',
+  'Omega 3 / Multivitamínico (Antiinflamatorio)',
+]
 
 export default function FichaCliente() {
   const { id } = useParams<{ id: string }>()
@@ -33,6 +55,10 @@ export default function FichaCliente() {
   const [formaPago, setFormaPago] = useState('Efectivo')
   const [registrandoPago, setRegistrandoPago] = useState(false)
 
+  const [aparatologiaSeleccion, setAparatologiaSeleccion] = useState<string[]>([])
+  const [prozisSuplemento, setProzisSuplemento] = useState('')
+  const [prozisIndicacion, setProzisIndicacion] = useState('')
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -43,6 +69,18 @@ export default function FichaCliente() {
           .single()
         if (error) throw error
         setCliente(data)
+        if (data.aparatologia) {
+          setAparatologiaSeleccion(data.aparatologia.split(',').filter(Boolean))
+        }
+        if (data.suplementacion_prozis) {
+          try {
+            const parsed = JSON.parse(data.suplementacion_prozis)
+            setProzisSuplemento(parsed.suplemento || '')
+            setProzisIndicacion(parsed.indicacion || '')
+          } catch {
+            setProzisSuplemento(data.suplementacion_prozis)
+          }
+        }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Error al cargar cliente')
       } finally {
@@ -82,6 +120,11 @@ export default function FichaCliente() {
           nombre: cliente.nombre,
           telefono: cliente.telefono,
           email: cliente.email,
+          sexo: cliente.sexo,
+          tipo_tratamiento: cliente.tipo_tratamiento,
+          recomendaciones_proxima: cliente.recomendaciones_proxima,
+          aparatologia: aparatologiaSeleccion.length > 0 ? aparatologiaSeleccion.join(',') : null,
+          suplementacion_prozis: prozisSuplemento ? JSON.stringify({ suplemento: prozisSuplemento, indicacion: prozisIndicacion }) : null,
           notas_privadas: cliente.notas_privadas,
         })
         .eq('id', cliente.id)
@@ -93,7 +136,7 @@ export default function FichaCliente() {
     } finally {
       setSaving(false)
     }
-  }, [cliente])
+  }, [cliente, aparatologiaSeleccion, prozisSuplemento, prozisIndicacion])
 
   const handleUpload = useCallback(async () => {
     if (!file || !cliente) return
@@ -144,12 +187,16 @@ export default function FichaCliente() {
       setError('El cliente no tiene teléfono registrado')
       return
     }
-    const telefono = cliente.telefono.replace(/\s+/g, '').replace(/^\+?34/, '')
-    const mensaje = encodeURIComponent(
-      `Hola ${cliente.nombre}, te confirmo tu próxima cita en Essential TM. Quedamos pendientes. Un saludo.`
-    )
-    window.open(`https://wa.me/34${telefono}?text=${mensaje}`, '_blank')
-  }, [cliente])
+    const soloDigitos = cliente.telefono.replace(/\D/g, '')
+    const codigoPais = soloDigitos.startsWith('34') ? '' : '34'
+    const telefono = `${codigoPais}${soloDigitos}`
+    let textoWhatsApp = `Hola ${cliente.nombre}, te saludamos de Essential TM. Te confirmamos tu sesión de hoy.`
+    if (prozisSuplemento) {
+      textoWhatsApp += `\n\n💊 Recomendación Prozis para tu recuperación: ${prozisSuplemento}${prozisIndicacion ? ` - ${prozisIndicacion}` : ''}`
+    }
+    const mensaje = encodeURIComponent(textoWhatsApp)
+    window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank')
+  }, [cliente, prozisSuplemento, prozisIndicacion])
 
   const handleRegistrarPago = useCallback(async () => {
     if (!cliente) return
@@ -184,39 +231,51 @@ export default function FichaCliente() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground">Cargando ficha...</p>
+      <div className="flex items-center justify-center min-h-screen bg-[#E8E4D9]">
+        <p className="text-[#8A9A8A] text-sm">Cargando ficha...</p>
       </div>
     )
   }
 
   if (!cliente) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <h1 className="text-2xl font-bold mb-4">Cliente no encontrado</h1>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#E8E4D9] p-4">
+        <h1 className="text-2xl font-bold text-[#3A5A40] mb-4">Cliente no encontrado</h1>
         <Button onClick={() => router.push('/')}>Volver al inicio</Button>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7F0] py-8 px-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#E8E4D9] py-8 px-4">
+      <div className="max-w-5xl mx-auto space-y-6">
 
         {/* Cabecera */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-[#2C3E2D]">{cliente.nombre}</h1>
+            <div className="flex items-center gap-4">
+              {cliente.sexo && (
+                <span className="text-xl">{cliente.sexo === 'Hombre' ? '♂' : '♀'}</span>
+              )}
+              <div>
+                <h1 className="text-2xl font-bold text-[#3A5A40]">{cliente.nombre}</h1>
+                {cliente.tipo_tratamiento && (
+                  <span className="inline-block mt-1 px-3 py-0.5 bg-[#C99470]/10 text-[#C99470] rounded-full text-xs font-medium">
+                    {cliente.tipo_tratamiento}
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="flex gap-2">
               {cliente.telefono && (
                 <Button
                   onClick={handleWhatsApp}
-                  className="bg-[#25D366] hover:bg-[#1DA851] text-white border-0"
+                  className="bg-[#25D366] hover:bg-[#1DA851] text-white border-0 text-sm font-medium"
                 >
                   Confirmar Cita por WhatsApp
                 </Button>
               )}
-              <Button variant="outline" onClick={() => router.push('/')}>
+              <Button variant="outline" onClick={() => router.push('/')} className="bg-[#5C6B73] hover:bg-[#4A5A63] text-white border-0">
                 Volver
               </Button>
             </div>
@@ -225,64 +284,214 @@ export default function FichaCliente() {
 
         {/* Mensajes */}
         {error && (
-          <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-xl p-4">{error}</p>
+          <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-2xl p-4">{error}</p>
         )}
         {success && (
-          <p className="text-green-700 text-sm bg-green-50 border border-green-200 rounded-xl p-4">{success}</p>
+          <p className="text-green-700 text-sm bg-green-50 border border-green-200 rounded-2xl p-4">{success}</p>
         )}
 
-        {/* Datos del cliente */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-[#2C3E2D] mb-5">Datos del cliente</h2>
-          <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Nombre completo</label>
-              <input
-                className="border border-[#DDE3D8] rounded-lg p-3 w-full text-sm focus:outline-none focus:ring-2 focus:ring-[#8BA888] focus:border-transparent transition"
-                value={cliente.nombre}
-                onChange={(e) => handleFieldChange('nombre', e.target.value)}
-                required
-              />
-            </div>
+        {/* Fila: Datos del cliente + Mapa Anatómico */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Datos del cliente */}
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+            <h2 className="text-lg font-semibold text-[#3A5A40] mb-5">Datos del cliente</h2>
+            <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Nombre completo</label>
+                  <input
+                    className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#C99470] focus:border-transparent focus:bg-white transition"
+                    value={cliente.nombre}
+                    onChange={(e) => handleFieldChange('nombre', e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Teléfono</label>
+                  <input
+                    className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#C99470] focus:border-transparent focus:bg-white transition"
+                    value={cliente.telefono || ''}
+                    onChange={(e) => handleFieldChange('telefono', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Email</label>
+                  <input
+                    className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#C99470] focus:border-transparent focus:bg-white transition"
+                    type="email"
+                    value={cliente.email || ''}
+                    onChange={(e) => handleFieldChange('email', e.target.value)}
+                  />
+                </div>
+              </div>
 
-            <div className="grid grid-cols-2 gap-4">
+              {/* Selector de Sexo */}
               <div>
-                <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Teléfono</label>
-                <input
-                  className="border border-[#DDE3D8] rounded-lg p-3 w-full text-sm focus:outline-none focus:ring-2 focus:ring-[#8BA888] focus:border-transparent transition"
-                  value={cliente.telefono || ''}
-                  onChange={(e) => handleFieldChange('telefono', e.target.value)}
+                <label className="block text-sm font-medium text-[#5A6B5A] mb-2">Sexo</label>
+                <div className="flex gap-3">
+                  {['Hombre', 'Mujer'].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => handleFieldChange('sexo', cliente.sexo === s ? '' : s)}
+                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium border transition ${
+                        cliente.sexo === s
+                          ? 'bg-[#C99470] text-white border-[#C99470] shadow-sm'
+                          : 'bg-gray-50 text-[#5A6B5A] border-gray-200 hover:border-[#C99470] hover:text-[#C99470]'
+                      }`}
+                    >
+                      <span className="text-base">{s === 'Hombre' ? '♂' : '♀'}</span>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Notas privadas</label>
+                <textarea
+                  className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#1F2937] placeholder:text-[#9CA3AF] min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#C99470] focus:border-transparent focus:bg-white transition resize-y"
+                  value={cliente.notas_privadas || ''}
+                  onChange={(e) => handleFieldChange('notas_privadas', e.target.value)}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Email</label>
-                <input
-                  className="border border-[#DDE3D8] rounded-lg p-3 w-full text-sm focus:outline-none focus:ring-2 focus:ring-[#8BA888] focus:border-transparent transition"
-                  type="email"
-                  value={cliente.email || ''}
-                  onChange={(e) => handleFieldChange('email', e.target.value)}
-                />
-              </div>
-            </div>
 
+              <Button type="submit" disabled={saving} className="bg-[#C99470] hover:bg-[#B88363] text-white border-0 text-sm font-medium">
+                {saving ? 'Guardando...' : 'Guardar cambios'}
+              </Button>
+            </form>
+          </div>
+
+          {/* Mapa Anatómico */}
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+            <BodyMap sexo={cliente.sexo || 'Mujer'} />
+          </div>
+        </div>
+
+        {/* Tratamiento Actual */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+          <h2 className="text-lg font-semibold text-[#3A5A40] mb-5">Tratamiento Actual</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Notas privadas</label>
+              <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Tipo de tratamiento</label>
+              <select
+                className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#C99470] focus:border-transparent focus:bg-white transition"
+                value={cliente.tipo_tratamiento || ''}
+                onChange={(e) => handleFieldChange('tipo_tratamiento', e.target.value)}
+              >
+                <option value="">Seleccionar tratamiento...</option>
+                {tiposTratamiento.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Recomendaciones próxima consulta</label>
               <textarea
-                className="border border-[#DDE3D8] rounded-lg p-3 w-full text-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#8BA888] focus:border-transparent transition resize-y"
-                value={cliente.notas_privadas || ''}
-                onChange={(e) => handleFieldChange('notas_privadas', e.target.value)}
+                className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#1F2937] placeholder:text-[#9CA3AF] min-h-[80px] focus:outline-none focus:ring-2 focus:ring-[#C99470] focus:border-transparent focus:bg-white transition resize-y"
+                placeholder="Ej: Realizar estiramientos diarios, aplicar calor local, evitar esfuerzos..."
+                value={cliente.recomendaciones_proxima || ''}
+                onChange={(e) => handleFieldChange('recomendaciones_proxima', e.target.value)}
               />
             </div>
+          </div>
+        </div>
 
-            <Button type="submit" disabled={saving} className="bg-[#2C3E2D] hover:bg-[#1A2B1B] text-white border-0">
-              {saving ? 'Guardando...' : 'Guardar cambios'}
-            </Button>
-          </form>
+        {/* Aparatología */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+          <h2 className="text-lg font-semibold text-[#3A5A40] mb-5">Aparatología</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {aparatologiaOptions.map((opt) => {
+              const checked = aparatologiaSeleccion.includes(opt)
+              return (
+                <label
+                  key={opt}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition ${
+                    checked
+                      ? 'bg-[#C99470]/5 border-[#C99470]'
+                      : 'bg-gray-50 border-gray-200 hover:border-[#C99470]'
+                  }`}
+                >
+                  <div
+                    onClick={() => {
+                      setAparatologiaSeleccion((prev) =>
+                        prev.includes(opt) ? prev.filter((a) => a !== opt) : [...prev, opt]
+                      )
+                    }}
+                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition cursor-pointer ${
+                      checked
+                        ? 'bg-[#C99470] border-[#C99470] text-white'
+                        : 'border-gray-300 bg-white'
+                    }`}
+                  >
+                    {checked && (
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className={`text-sm font-medium ${checked ? 'text-[#C99470]' : 'text-[#5A6B5A]'}`}>
+                    {opt}
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Suplementación Prozis */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 relative overflow-hidden">
+          <div className="flex items-start justify-between mb-5">
+            <h2 className="text-lg font-semibold text-[#3A5A40]">Suplementación Prozis</h2>
+            <span className="px-2.5 py-1 bg-[#111827] text-white text-[10px] font-bold uppercase tracking-wider rounded-md leading-relaxed">
+              PROZIS PARTNER
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Producto recomendado</label>
+              <select
+                className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent focus:bg-white transition"
+                value={prozisSuplemento}
+                onChange={(e) => setProzisSuplemento(e.target.value)}
+              >
+                <option value="">Seleccionar suplemento...</option>
+                {prozisOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Indicación de uso</label>
+              <input
+                className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent focus:bg-white transition"
+                placeholder="según indicaciones"
+                value={prozisIndicacion}
+                onChange={(e) => setProzisIndicacion(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {prozisSuplemento && (
+            <div className="mt-5 bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[#111827] flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[#111827]">{prozisSuplemento}</p>
+                {prozisIndicacion && (
+                  <p className="text-xs text-[#5A6B5A] mt-0.5">Uso: {prozisIndicacion}</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Cierre de consulta */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-[#2C3E2D] mb-5">Cierre de consulta</h2>
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+          <h2 className="text-lg font-semibold text-[#3A5A40] mb-5">Cierre de consulta</h2>
           <div className="grid grid-cols-2 gap-4 mb-5">
             <div>
               <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Monto total (€)</label>
@@ -290,7 +499,7 @@ export default function FichaCliente() {
                 type="number"
                 min="0"
                 step="0.01"
-                className="border border-[#DDE3D8] rounded-lg p-3 w-full text-sm focus:outline-none focus:ring-2 focus:ring-[#8BA888] focus:border-transparent transition"
+                className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#C99470] focus:border-transparent focus:bg-white transition"
                 placeholder="0.00"
                 value={montoTotal}
                 onChange={(e) => setMontoTotal(e.target.value)}
@@ -300,7 +509,7 @@ export default function FichaCliente() {
             <div>
               <label className="block text-sm font-medium text-[#5A6B5A] mb-1.5">Forma de pago</label>
               <select
-                className="border border-[#DDE3D8] rounded-lg p-3 w-full text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#8BA888] focus:border-transparent transition"
+                className="border border-gray-200 bg-gray-50 rounded-lg p-3 w-full text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#C99470] focus:border-transparent focus:bg-white transition"
                 value={formaPago}
                 onChange={(e) => setFormaPago(e.target.value)}
                 disabled={registrandoPago}
@@ -311,14 +520,14 @@ export default function FichaCliente() {
               </select>
             </div>
           </div>
-          <Button onClick={handleRegistrarPago} disabled={!montoTotal || registrandoPago} className="bg-[#7A9A7A] hover:bg-[#6A8A6A] text-white border-0">
+          <Button onClick={handleRegistrarPago} disabled={!montoTotal || registrandoPago} className="bg-[#C99470] hover:bg-[#B88363] text-white border-0 text-sm font-medium">
             {registrandoPago ? 'Registrando...' : 'Registrar Pago'}
           </Button>
         </div>
 
         {/* Subir imagen */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-[#2C3E2D] mb-5">Subir imagen</h2>
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+          <h2 className="text-lg font-semibold text-[#3A5A40] mb-5">Subir imagen</h2>
           <div className="space-y-4">
             <input
               ref={fileInputRef}
@@ -326,9 +535,9 @@ export default function FichaCliente() {
               accept="image/*"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               disabled={uploading}
-              className="text-sm text-[#5A6B5A] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#EDF0EA] file:text-[#2C3E2D] hover:file:bg-[#DDE3D8] transition"
+              className="text-sm text-[#5A6B5A] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#C99470] file:text-white hover:file:bg-[#B88363] transition"
             />
-            <Button onClick={handleUpload} disabled={!file || uploading} variant="outline">
+            <Button onClick={handleUpload} disabled={!file || uploading} variant="outline" className="bg-[#5C6B73] hover:bg-[#4A5A63] text-white border-0 text-sm font-medium">
               {uploading ? 'Subiendo...' : 'Subir foto'}
             </Button>
           </div>
@@ -338,7 +547,7 @@ export default function FichaCliente() {
               <h3 className="text-sm font-semibold text-[#5A6B5A] mb-3">Fotos subidas</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {imagenes.map((img) => (
-                  <div key={img.id} className="border border-[#DDE3D8] rounded-lg overflow-hidden bg-white">
+                  <div key={img.id} className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
                     <img
                       src={img.url_imagen}
                       alt={img.descripcion || 'Foto'}
