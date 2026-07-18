@@ -17,8 +17,8 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <h1 className="text-4xl font-bold mb-8">Essential TM</h1>
       {user ? (
-        <Button onClick={() => router.push("/pacientes")}>
-          Ir a pacientes
+        <Button onClick={() => router.push("/clientes")}>
+          Ir a clientes
         </Button>
       ) : (
         <Button onClick={() => router.push("/login")}>

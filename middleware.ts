@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 
 const publicRoutes = ['/', '/login', '/recuperar-password', '/actualizar-password']
 
-export default async function proxy(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (publicRoutes.includes(pathname)) {

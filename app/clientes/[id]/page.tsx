@@ -5,20 +5,20 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from "@/components/ui/button"
 
-type Paciente = {
+type Cliente = {
   id: string
   nombre: string
   telefono: string | null
   email: string | null
-  historia_clinica: string | null
-  notas: string | null
+  notas_privadas: string | null
+  creado_el: string
 }
 
-export default function FichaPaciente() {
+export default function FichaCliente() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
 
-  const [paciente, setPaciente] = useState<Paciente | null>(null)
+  const [cliente, setCliente] = useState<Cliente | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,14 +31,14 @@ export default function FichaPaciente() {
     const load = async () => {
       try {
         const { data, error } = await supabase
-          .from('pacientes')
+          .from('clientes')
           .select('*')
           .eq('id', id)
           .single()
         if (error) throw error
-        setPaciente(data)
+        setCliente(data)
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Error al cargar paciente')
+        setError(err instanceof Error ? err.message : 'Error al cargar cliente')
       } finally {
         setLoading(false)
       }
@@ -46,28 +46,26 @@ export default function FichaPaciente() {
     load()
   }, [id])
 
-  const handleFieldChange = useCallback((field: keyof Paciente, value: string) => {
-    setPaciente((prev) => prev ? { ...prev, [field]: value || null } : prev)
+  const handleFieldChange = useCallback((field: keyof Cliente, value: string) => {
+    setCliente((prev) => prev ? { ...prev, [field]: value || null } : prev)
   }, [])
 
   const handleSave = useCallback(async () => {
-    if (!paciente) return
+    if (!cliente) return
     setSaving(true)
     setError(null)
     setSuccess(null)
 
     try {
       const { error } = await supabase
-        .from('pacientes')
+        .from('clientes')
         .update({
-          nombre: paciente.nombre,
-          telefono: paciente.telefono,
-          email: paciente.email,
-          historia_clinica: paciente.historia_clinica,
-          notas: paciente.notas,
-          updated_at: new Date().toISOString(),
+          nombre: cliente.nombre,
+          telefono: cliente.telefono,
+          email: cliente.email,
+          notas_privadas: cliente.notas_privadas,
         })
-        .eq('id', paciente.id)
+        .eq('id', cliente.id)
       if (error) throw error
       setSuccess('Datos guardados correctamente')
       setTimeout(() => setSuccess(null), 3000)
@@ -76,16 +74,16 @@ export default function FichaPaciente() {
     } finally {
       setSaving(false)
     }
-  }, [paciente])
+  }, [cliente])
 
   const handleUpload = useCallback(async () => {
-    if (!file || !paciente) return
+    if (!file || !cliente) return
     setUploading(true)
     setError(null)
 
     try {
       const ext = file.name.split('.').pop() || 'png'
-      const path = `${paciente.id}/${crypto.randomUUID()}.${ext}`
+      const path = `${cliente.id}/${crypto.randomUUID()}.${ext}`
 
       const { error: uploadError } = await supabase.storage
         .from('fotos-pacientes')
@@ -99,7 +97,7 @@ export default function FichaPaciente() {
       const { error: dbError } = await supabase
         .from('imagenes_paciente')
         .insert({
-          paciente_id: paciente.id,
+          paciente_id: cliente.id,
           url_imagen: urlData.publicUrl,
           descripcion: file.name,
         })
@@ -113,7 +111,7 @@ export default function FichaPaciente() {
     } finally {
       setUploading(false)
     }
-  }, [file, paciente])
+  }, [file, cliente])
 
   if (loading) {
     return (
@@ -123,10 +121,10 @@ export default function FichaPaciente() {
     )
   }
 
-  if (!paciente) {
+  if (!cliente) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <h1 className="text-2xl font-bold mb-4">Paciente no encontrado</h1>
+        <h1 className="text-2xl font-bold mb-4">Cliente no encontrado</h1>
         <Button onClick={() => router.push('/')}>Volver al inicio</Button>
       </div>
     )
@@ -135,7 +133,7 @@ export default function FichaPaciente() {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">{paciente.nombre}</h1>
+        <h1 className="text-2xl font-bold">{cliente.nombre}</h1>
         <Button variant="outline" onClick={() => router.push('/')}>
           Volver
         </Button>
@@ -153,7 +151,7 @@ export default function FichaPaciente() {
           <label className="block text-sm font-medium mb-1">Nombre completo</label>
           <input
             className="border p-2 w-full rounded"
-            value={paciente.nombre}
+            value={cliente.nombre}
             onChange={(e) => handleFieldChange('nombre', e.target.value)}
             required
           />
@@ -164,7 +162,7 @@ export default function FichaPaciente() {
             <label className="block text-sm font-medium mb-1">Teléfono</label>
             <input
               className="border p-2 w-full rounded"
-              value={paciente.telefono || ''}
+              value={cliente.telefono || ''}
               onChange={(e) => handleFieldChange('telefono', e.target.value)}
             />
           </div>
@@ -173,27 +171,18 @@ export default function FichaPaciente() {
             <input
               className="border p-2 w-full rounded"
               type="email"
-              value={paciente.email || ''}
+              value={cliente.email || ''}
               onChange={(e) => handleFieldChange('email', e.target.value)}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Historia clínica</label>
+          <label className="block text-sm font-medium mb-1">Notas privadas</label>
           <textarea
             className="border p-2 w-full rounded min-h-[100px]"
-            value={paciente.historia_clinica || ''}
-            onChange={(e) => handleFieldChange('historia_clinica', e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Notas</label>
-          <textarea
-            className="border p-2 w-full rounded min-h-[100px]"
-            value={paciente.notas || ''}
-            onChange={(e) => handleFieldChange('notas', e.target.value)}
+            value={cliente.notas_privadas || ''}
+            onChange={(e) => handleFieldChange('notas_privadas', e.target.value)}
           />
         </div>
 
