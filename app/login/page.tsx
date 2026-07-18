@@ -23,7 +23,7 @@ export default function LoginPage() {
       if (error) {
         setError(error.message)
       } else {
-        router.push('/pacientes')
+        router.push('/clientes')
       }
     } catch {
       setError('Error de conexión. Inténtalo de nuevo.')
